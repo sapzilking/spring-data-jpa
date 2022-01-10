@@ -18,9 +18,9 @@ public class Member {
     @GeneratedValue
     @Column(name = "member_id")
     private Long id;
+    private String username;
     private int age;
 
-    private String username;
 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "team_id") // JoinColumn의 이름은 foreign key의 이름이다. 이 부분을 다른 엔티티의 기본키의 이름이라고 생각해서 헤깔렸던것 같다.
@@ -28,6 +28,11 @@ public class Member {
 
     public Member(String username) {
         this.username = username;
+    }
+
+    public Member(String username, int age) {
+        this.username = username;
+        this.age = age;
     }
 
     public Member(String username, int age, Team team) {
