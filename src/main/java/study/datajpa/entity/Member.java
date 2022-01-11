@@ -11,6 +11,10 @@ import static lombok.AccessLevel.*;
 @Setter
 @NoArgsConstructor(access = PROTECTED) // JPA는 기본적으로 기본생성자가 있어야함.(프록시 접근 등의 다양한 이유로..)
 @ToString(of = {"id", "username", "age"}) // team처럼 연관관계 필드는 출력하지 말자. 양쪽으로 참조를 하다가 stackoverflow가 발생한다.
+@NamedQuery(
+        name="Member.findByUsername",
+        query="select m from Member m where m.username = :username"
+) //NamedQuery는 실무에서 거의 사용하지 않는다. 왜냐하면 Repository에 바로 쿼리를 작성할 수 있기 때문이다.
 @Entity
 public class Member {
 
