@@ -179,6 +179,11 @@ class MemberRepositoryTest {
         //when
         Page<Member> page = memberRepository.findByAge(age, pageRequest);
 
+        //Dto로 변환하는 예제
+        //이런식으로 Entity를 절대 반환하지 말고 Dto로 변환해서 반환해야 한다.
+        Page<MemberDto> toMap = page.map(m -> new MemberDto(m.getId(), m.getUsername(), null));
+
+
         //then
         List<Member> content = page.getContent(); //page내의 내부 content가져오기
         long totalElements = page.getTotalElements(); //totalCount랑 같음
