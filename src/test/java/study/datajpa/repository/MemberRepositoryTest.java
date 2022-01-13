@@ -13,6 +13,7 @@ import study.datajpa.dto.MemberDto;
 import study.datajpa.entity.Member;
 import study.datajpa.entity.Team;
 
+import javax.persistence.EntityManager;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ class MemberRepositoryTest {
 
     @Autowired MemberRepository memberRepository;
     @Autowired TeamRepository teamRepository;
+    @Autowired EntityManager em; //같은 트랜잭션 안에서는 다 같은 EntityManager를 사용한다. 즉 memberRepository와 teamRepository는 같은 em을 사용한다.
 
     @Test
     public void testMember() throws Exception {
@@ -277,6 +279,32 @@ class MemberRepositoryTest {
         assertThat(page.getTotalPages()).isEqualTo(2);
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
+    }
+
+    //Spring Data JPA를 이용한 bulkUpdate
+    @Test
+    public void bulkUpdate() throws Exception {
+        //given
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 19));
+        memberRepository.save(new Member("member3", 20));
+        memberRepository.save(new Member("member4",  21));
+        memberRepository.save(new Member("member5", 40));
+
+        //when
+        //bulk연산은 영속성 컨텍스트를 거치지 않고 바로 DB에 접근하여 쿼리를 날리기 때문에 벌크 연산 이후에는 영속성 컨텍스트 초기화를 꼭 해주자!
+        //bulk연산 후에 로직이 끝나면 상관없지만, 같은 트랜잭션 안에서 또 다른 로직이 있고 값을 참조하면 실제 DB값과 영속성 컨텍스트에 있는 값이 다르므로 큰일난다.
+        //여기서 영속성 컨텍스트를 초기화 해주어도 되고, Spring Data JPA에서는 옵션을 지원한다. (@Modifying에 clearAutomatically속성을 true로 해주면 여기서 초기화를 안해줘도 된다.)
+        int resultcount = memberRepository.bulkAgePlus(20);
+//        em.flush();
+//        em.clear();
+
+        List<Member> result = memberRepository.findByUsername("member5");
+        Member member5 = result.get(0);
+        System.out.println("member5 = " + member5);
+
+        //then
+        assertThat(resultcount).isEqualTo(3);
     }
 
 
