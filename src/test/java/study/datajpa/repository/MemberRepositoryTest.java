@@ -282,30 +282,97 @@ class MemberRepositoryTest {
     }
 
     //Spring Data JPA를 이용한 bulkUpdate
-    @Test
-    public void bulkUpdate() throws Exception {
-        //given
-        memberRepository.save(new Member("member1", 10));
-        memberRepository.save(new Member("member2", 19));
-        memberRepository.save(new Member("member3", 20));
-        memberRepository.save(new Member("member4",  21));
-        memberRepository.save(new Member("member5", 40));
+        @Test
+        public void bulkUpdate() throws Exception {
+            //given
+            memberRepository.save(new Member("member1", 10));
+            memberRepository.save(new Member("member2", 19));
+            memberRepository.save(new Member("member3", 20));
+            memberRepository.save(new Member("member4", 21));
+            memberRepository.save(new Member("member5", 40));
 
-        //when
-        //bulk연산은 영속성 컨텍스트를 거치지 않고 바로 DB에 접근하여 쿼리를 날리기 때문에 벌크 연산 이후에는 영속성 컨텍스트 초기화를 꼭 해주자!
-        //bulk연산 후에 로직이 끝나면 상관없지만, 같은 트랜잭션 안에서 또 다른 로직이 있고 값을 참조하면 실제 DB값과 영속성 컨텍스트에 있는 값이 다르므로 큰일난다.
-        //여기서 영속성 컨텍스트를 초기화 해주어도 되고, Spring Data JPA에서는 옵션을 지원한다. (@Modifying에 clearAutomatically속성을 true로 해주면 여기서 초기화를 안해줘도 된다.)
-        int resultcount = memberRepository.bulkAgePlus(20);
-//        em.flush();
-//        em.clear();
+            //when
+            //bulk연산은 영속성 컨텍스트를 거치지 않고 바로 DB에 접근하여 쿼리를 날리기 때문에 벌크 연산 이후에는 영속성 컨텍스트 초기화를 꼭 해주자!
+            //bulk연산 후에 로직이 끝나면 상관없지만, 같은 트랜잭션 안에서 또 다른 로직이 있고 값을 참조하면 실제 DB값과 영속성 컨텍스트에 있는 값이 다르므로 큰일난다.
+            //여기서 영속성 컨텍스트를 초기화 해주어도 되고, Spring Data JPA에서는 옵션을 지원한다. (@Modifying에 clearAutomatically속성을 true로 해주면 여기서 초기화를 안해줘도 된다.)
+            int resultcount = memberRepository.bulkAgePlus(20);
+    //        em.flush();
+    //        em.clear();
 
-        List<Member> result = memberRepository.findByUsername("member5");
-        Member member5 = result.get(0);
-        System.out.println("member5 = " + member5);
+            List<Member> result = memberRepository.findByUsername("member5");
+            Member member5 = result.get(0);
+            System.out.println("member5 = " + member5);
 
-        //then
-        assertThat(resultcount).isEqualTo(3);
-    }
+            //then
+            assertThat(resultcount).isEqualTo(3);
+        }
+
+        @Test
+        public void findMemberLazy() throws Exception {
+            //given
+            //member1 -> teamA
+            //member2 -> teamB
+
+            Team teamA = new Team("teamA");
+            Team teamB = new Team("teamB");
+            teamRepository.save(teamA);
+            teamRepository.save(teamB);
+
+            Member member1 = new Member("member1", 10, teamA);
+            Member member2 = new Member("member2", 10, teamB);
+            memberRepository.save(member1);
+            memberRepository.save(member2);
+
+            em.flush();
+            em.clear();
+
+            //when N + 1 (member를 조회해온 쿼리 1번 + 각 멤버에 해당되는 팀을 멤버 수만큼 조회해오므로 여기가 N번) 즉 N+1문제임
+            //select Member 1
+//            List<Member> members = memberRepository.findAll();
+//            List<Member> members = memberRepository.findMemberEntityGraph();
+            List<Member> members = memberRepository.findEntityGraphByUsername("member1");
+
+            for (Member member : members) {
+                System.out.println("member = " + member.getUsername());
+                System.out.println("member.teamClass = " + member.getTeam().getClass());
+                System.out.println("member.team = " + member.getTeam().getName());
+            }
+
+            //then
+         }
+         @Test
+        public void findMemberFetchJoin() throws Exception {
+            //given
+            //member1 -> teamA
+            //member2 -> teamB
+
+            Team teamA = new Team("teamA");
+            Team teamB = new Team("teamB");
+            teamRepository.save(teamA);
+            teamRepository.save(teamB);
+
+            Member member1 = new Member("member1", 10, teamA);
+            Member member2 = new Member("member2", 10, teamB);
+            memberRepository.save(member1);
+            memberRepository.save(member2);
+
+            em.flush();
+            em.clear();
+
+            //when 위에서 발생한 N+1문제를 해결함
+            List<Member> members = memberRepository.findMemberFetchJoin();
+
+            for (Member member : members) {
+                System.out.println("member = " + member.getUsername());
+                System.out.println("member.teamClass = " + member.getTeam().getClass());
+                System.out.println("member.team = " + member.getTeam().getName());
+            }
+
+            //then
+         }
+
+
+
 
 
 }

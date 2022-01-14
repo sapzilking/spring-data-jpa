@@ -3,6 +3,7 @@ package study.datajpa.repository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -59,5 +60,18 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int bulkAgePlus(@Param("age") int age);
 
+    @Query("select m from Member m left join fetch m.team")
+    List<Member> findMemberFetchJoin();
 
+    @Override
+    @EntityGraph(attributePaths = {"team"}) //fetch조인 매번 쿼리적어주기 귀찮으니 이렇게 해주면 fetch join과 같은효과.
+    List<Member> findAll();
+
+
+    @EntityGraph(attributePaths = {"team"})
+    @Query("select m from Member m")
+    List<Member> findMemberEntityGraph(); //이런식으로 Query를 직접 짜고 여기에 fetch join만 추가해줄수도 있음. (EntityGraph를 추가한건 결국 fetch join을 추가했다고 보면된다.)
+
+    @EntityGraph(attributePaths = ("team"))
+    List<Member> findEntityGraphByUsername(@Param("username") String username);
 }
