@@ -2,6 +2,7 @@ package study.datajpa.dto;
 
 
 import lombok.Data;
+import study.datajpa.entity.Member;
 
 @Data //단순 Dto라서 Data annotation 을 사용했음. (Entity에는 스택오버플로가 발생할 수 있으므로 사용하지 않기)
 public class MemberDto {
@@ -17,5 +18,8 @@ public class MemberDto {
         this.teamName = teamName;
     }
 
-
+    public MemberDto(Member member) {
+        id = member.getId();
+        username = member.getUsername();
+    }
 }
