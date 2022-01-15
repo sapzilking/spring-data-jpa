@@ -16,7 +16,7 @@ import static lombok.AccessLevel.*;
         query="select m from Member m where m.username = :username"
 ) //NamedQuery는 실무에서 거의 사용하지 않는다. 왜냐하면 Repository에 바로 쿼리를 작성할 수 있기 때문이다.
 @Entity
-public class Member extends JpaBaseEntity {
+public class Member extends BaseEntity {
 
     @Id
     @GeneratedValue
