@@ -30,11 +30,11 @@ public class MemberController {
     }
 
     @GetMapping("/members")
-    public Page<MemberDto> list(@PageableDefault(size = 5) Pageable pageable) {
+    public Page<MemberDto> list(@PageableDefault(size = 5) Pageable pageable) { //PageableDefault로 페이지 속성을 설정할 수 있다.
         return memberRepository.findAll(pageable).map(MemberDto::new);
     }
 
-    @PostConstruct
+//    @PostConstruct
     public void init() {
         for (int i = 0; i < 100; i++) {
             memberRepository.save(new Member("user" + i, i));
